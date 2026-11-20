@@ -1,0 +1,186 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>EduMonitor English SMA</title><style>:root{--navy:#0b2a55;--navy2:#143a73;--acc:#2f7bff;--bg:#f2f6fc;--line:#dbe4f1;--tx:#1b2a41;--mut:#5d6f89;--ok:#1a9d5c;--bad:#d64545}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:15px}
+h1,h2,h3{margin:0 0 .6rem;color:var(--navy)}
+a{color:var(--acc);cursor:pointer;text-decoration:none}
+.lg{min-height:100vh;display:grid;place-items:center;padding:1rem;background:linear-gradient(135deg,var(--navy),var(--navy2))}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:1.1rem;margin-bottom:1rem}
+.lg .card{width:min(420px,100%)}
+.lg p.sl{color:var(--mut);margin:0 0 1rem}
+.tabs{display:flex;gap:.4rem;margin-bottom:.8rem;flex-wrap:wrap}
+.tabs button{flex:1;padding:.5rem;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer}
+.tabs button.on{background:var(--navy);color:#fff}
+label{display:block;margin:.5rem 0;font-weight:600;font-size:.85rem;color:var(--mut)}
+label.r{font-weight:400;color:var(--tx)}
+input,select,textarea{width:100%;padding:.55rem;border:1px solid var(--line);border-radius:6px;font:inherit;margin-top:.2rem}
+input[type=radio]{width:auto;margin-right:.4rem}
+.b{background:var(--acc);color:#fff;border:0;border-radius:6px;padding:.55rem 1rem;cursor:pointer;font:inherit;font-weight:600;margin-top:.5rem}
+.b.g{background:#e6eefb;color:var(--navy)}
+.lay{display:flex;min-height:100vh}
+.sb{width:220px;background:var(--navy);color:#fff;padding:1rem .6rem;flex-shrink:0}
+.sb h2{color:#fff;font-size:1.05rem;padding:0 .6rem}
+.sb small{display:block;color:#9fb8e0;padding:0 .6rem 1rem}
+.sb a{display:block;color:#cfe0ff;padding:.55rem .7rem;border-radius:6px}
+.sb a.on,.sb a:hover{background:var(--acc);color:#fff}
+.mn{flex:1;min-width:0}
+.tp{display:flex;justify-content:flex-end;gap:1rem;align-items:center;padding:.7rem 1.2rem;background:#fff;border-bottom:1px solid var(--line)}
+.ct{padding:1.2rem}
+.gr{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin-bottom:1rem}
+.st{background:#fff;border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:8px;padding:.8rem}
+.st b{display:block;font-size:1.6rem;color:var(--navy)}
+.st span{color:var(--mut);font-size:.8rem}
+.bar{display:flex;gap:.5rem;margin-bottom:.7rem;flex-wrap:wrap}
+.bar input,.bar select{width:auto;flex:1;min-width:140px;margin:0}
+.bar .b{margin:0}
+.tw{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%}
+th,td{padding:.55rem .7rem;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:#eaf1fc;color:var(--navy);font-size:.82rem}
+td.ac a{margin-right:.6rem;white-space:nowrap}
+.ov{position:fixed;inset:0;background:#0b2a5599;display:grid;place-items:center;padding:1rem;z-index:9;overflow:auto}
+.ov[hidden]{display:none}
+.m{background:#fff;border-radius:10px;padding:1.2rem;width:min(640px,100%);max-height:90vh;overflow:auto}
+.hb{height:14px;background:var(--acc);border-radius:3px;margin:.2rem 0}
+.tag{display:inline-block;padding:.1rem .5rem;border-radius:10px;background:#e6eefb;color:var(--navy);font-size:.78rem}
+.bad{color:var(--bad);font-weight:600}.ok{color:var(--ok);font-weight:600}
+.sw .tp{justify-content:space-between}
+.sw .ct{max-width:760px;margin:auto}
+@media(max-width:760px){.lay{flex-direction:column}.sb{width:100%;display:flex;overflow-x:auto;gap:.3rem;padding:.5rem}.sb h2,.sb small{display:none}.sb a{white-space:nowrap}}
+@media print{.sb,.tp,.bar,.b{display:none!important}.ov{position:static;background:none}}
+</style></head><body><div id="app"></div><div id="modal" class="ov" hidden></div><script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import {getFirestore,collection,getDocs,doc,setDoc,deleteDoc} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+import {getAuth,signInAnonymously,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+/* GANTI dengan firebaseConfig milik Anda (Firebase Console > Project settings > Your apps) */
+const app=initializeApp({apiKey:"AIzaSyDF-jTtVzTf4l73EQFL6sOWp58sWXo4XIs",authDomain:"rohania-english.firebaseapp.com",projectId:"rohania-english",storageBucket:"rohania-english.firebasestorage.app",messagingSenderId:"853989025850",appId:"1:853989025850:web:71570c79cc4b416f362d03"});
+const db=getFirestore(app),auth=getAuth(app);
+const COLS=['kelas','siswa','modul','materi','kuis','tugas','hasil','kumpul','presensi','jurnal','refleksi'];
+const last={},rid=r=>r.id||r.siswa+'_'+r.tgl;
+async function pull(){const d={log:[]};let n=0;
+ for(const c of COLS){const s=await getDocs(collection(db,c));d[c]=s.docs.map(x=>x.data());n+=s.size;last[c]={};d[c].forEach(r=>last[c][rid(r)]=JSON.stringify(r))}
+ return n?d:null}
+async function push(d){
+ for(const c of COLS){const ids=new Set();last[c]=last[c]||{};
+  for(const r of d[c]||[]){const id=rid(r),j=JSON.stringify(r);ids.add(id);if(last[c][id]!==j){await setDoc(doc(db,c,id),r);last[c][id]=j}}
+  for(const id of Object.keys(last[c]))if(!ids.has(id)){await deleteDoc(doc(db,c,id));delete last[c][id]}}}
+window.fb={push,
+ init:async()=>{await auth.authStateReady();if(!auth.currentUser)await signInAnonymously(auth);return pull()},
+ login:(e,p)=>signInWithEmailAndPassword(auth,e,p),
+ logout:()=>signOut(auth)};
+</script>
+<script>/* EduMonitor English SMA - versi front-end (data tersimpan di localStorage browser) */
+const K='edumonitor_v1',$=s=>document.querySelector(s),uid=()=>Math.random().toString(36).slice(2,9),today=()=>new Date().toISOString().slice(0,10);
+const x=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ELM=['Menyimak','Membaca dan Memirsa','Berbicara dan Mempresentasikan','Menulis'],KS=['Reading','Listening','Speaking','Writing','Grammar','Vocabulary','Integrated Skills'];
+const TP=['Teks','Gambar','Video','Audio','PDF','Presentasi','Tautan'];
+const FILE='pdf,doc,docx';
+let DB=JSON.parse(localStorage.getItem(K)||'null')||seed(),S=JSON.parse(sessionStorage.getItem('edu_s')||'null'),TM,PK='',PD=today(),PP=1,RK='';
+const save=()=>{localStorage.setItem(K,JSON.stringify(DB));window.fb&&fb.push(DB).catch(console.error)};
+const log=m=>{DB.log.unshift({t:new Date().toLocaleString('id-ID'),m});DB.log=DB.log.slice(0,100)};
+const kn=id=>(DB.kelas.find(k=>k.id==id)||{}).nama||'-',sn=id=>(DB.siswa.find(k=>k.id==id)||{}).nama||'-';
+const O={
+kelas:{t:'Kelas',f:[['nama','Nama Kelas'],['kode','Kode Kelas'],['tahun','Tahun Ajaran']],c:['nama','kode','tahun']},
+siswa:{t:'Siswa',f:[['nama','Nama Lengkap'],['kelas','Kelas','kelas'],['nis','NIS']],c:['nama','kelas','nis']},
+modul:{t:'Modul',f:[['judul','Judul Modul'],['kelas','Kelas','kelas'],['semester','Semester','sel',['Ganjil','Genap']],['elemen','Elemen','sel',ELM],['fase','Fase','sel',['E','F']],['cp','Capaian Pembelajaran (CP)','ta'],['tp','Tujuan Pembelajaran (TP)','ta'],['pemahaman','Pemahaman Bermakna','ta'],['pemantik','Pertanyaan Pemantik','ta'],['materi','Materi','ta'],['aktivitas','Aktivitas: Memahami - Mengaplikasi - Merefleksi','ta'],['asesmen','Asesmen dan Rubrik','ta'],['refleksi','Refleksi','ta'],['file','Berkas (PDF/DOC/DOCX)','file',FILE],['status','Status','sel',['Draf','Terbit','Arsip']]],c:['judul','kelas','semester','elemen','status']},
+materi:{t:'Materi',f:[['judul','Judul'],['kelas','Kelas','kelas'],['ks','Keterampilan','sel',KS],['tipe','Jenis Media','sel',TP],['isi','Isi teks / URL tautan, gambar, video, audio','ta']],c:['judul','kelas','ks','tipe']},
+kuis:{t:'Kuis',f:[['judul','Judul Kuis'],['kelas','Kelas','kelas'],['durasi','Batas waktu (menit, 0 = tanpa batas)','number'],['acak','Acak soal','sel',['Ya','Tidak']],['soal','Soal, satu per baris: tipe|pertanyaan|opsi1;opsi2|kunci   (tipe: pg, bs, isi, uraian)','ta']],c:['judul','kelas','durasi','acak']},
+tugas:{t:'Tugas',f:[['judul','Judul Tugas'],['kelas','Kelas','kelas'],['instruksi','Instruksi','ta'],['tenggat','Tenggat','date'],['rubrik','Rubrik','ta'],['file','Lampiran','file',FILE+',jpg,png']],c:['judul','kelas','tenggat']},
+jurnal:{t:'Jurnal',f:[['tgl','Tanggal','date'],['kelas','Kelas','kelas'],['materi','Materi'],['tujuan','Tujuan Pembelajaran','ta'],['aktivitas','Aktivitas','ta'],['refleksi','Refleksi Guru','ta'],['tindak','Tindak Lanjut','ta']],c:['tgl','kelas','materi','tindak']}};
+function seed(){const a=uid(),b=uid(),n=['Ayu Lestari','Budi Santoso','Citra Dewi','Dimas Pratama','Eka Putri','Fajar Nugraha'],s=n.map((m,i)=>({id:uid(),nama:m,kelas:i<3?a:b,nis:'2026'+(100+i)}));
+const t=uid(),q=uid(),d={kelas:[{id:a,nama:'X-A',kode:'XA2026',tahun:'2026/2027'},{id:b,nama:'XI-B',kode:'XIB2026',tahun:'2026/2027'}],siswa:s,
+modul:[{id:uid(),judul:'Descriptive Text: My Hometown',kelas:a,semester:'Ganjil',elemen:ELM[1],fase:'E',cp:'Peserta didik memahami teks deskriptif.',tp:'Menulis teks deskriptif sederhana.',pemahaman:'Deskripsi membantu orang membayangkan tempat.',pemantik:'Apa yang membuat kotamu istimewa?',materi:'Struktur: identification, description.',aktivitas:'Memahami: baca teks. Mengaplikasi: tulis. Merefleksi: jurnal.',asesmen:'Rubrik menulis 4 level.',refleksi:'',status:'Terbit'},{id:uid(),judul:'Narrative Text',kelas:b,semester:'Genap',elemen:ELM[3],fase:'F',cp:'',tp:'',pemahaman:'',pemantik:'',materi:'',aktivitas:'',asesmen:'',refleksi:'',status:'Draf'}],
+materi:[{id:uid(),judul:'Reading: A Day in Majene',kelas:a,ks:'Reading',tipe:'Teks',isi:'Majene is a quiet coastal town in West Sulawesi...'},{id:uid(),judul:'Simple Present Tense',kelas:a,ks:'Grammar',tipe:'Tautan',isi:'https://www.britishcouncil.org'}],
+kuis:[{id:q,judul:'Kuis Grammar 1',kelas:a,durasi:10,acak:'Ya',soal:'pg|She ___ to school every day.|go;goes;going|goes\nbs|"Cats is cute" is correct.||Salah\nisi|Plural of child is ___||children\nuraian|Describe your hometown in 2 sentences.||'}],
+tugas:[{id:t,judul:'Tulis Teks Deskriptif',kelas:a,instruksi:'Tulis 80 kata tentang tempat favoritmu.',tenggat:'2026-12-31',rubrik:'Isi 40, Bahasa 40, Struktur 20'}],
+hasil:[{id:uid(),kuis:q,siswa:s[0].id,skor:100,t:today()},{id:uid(),kuis:q,siswa:s[1].id,skor:50,t:today()}],kumpul:[{id:uid(),tugas:t,siswa:s[0].id,teks:'My hometown is...',nilai:85,umpan:'Bagus!',t:today()},{id:uid(),tugas:t,siswa:s[1].id,teks:'I live in...',nilai:'',umpan:'',t:today()}],
+presensi:[],jurnal:[{id:uid(),tgl:today(),kelas:a,materi:'Descriptive Text',tujuan:'Mengenal struktur teks',aktivitas:'Diskusi dan menulis',refleksi:'Siswa antusias',tindak:'Remedial untuk 1 siswa'}],refleksi:[],log:[]};
+s.forEach((m,i)=>d.presensi.push({siswa:m.id,tgl:today(),s:i==5?'A':i==3?'S':'H'}));localStorage.setItem(K,JSON.stringify(d));return d}
+/* ---------- umum ---------- */
+function modal(h){const m=$('#modal');m.innerHTML=`<div class=m>${h}<p><a onclick="closeM()">Tutup</a></p></div>`;m.hidden=false}
+function closeM(){clearInterval(TM);$('#modal').hidden=true}
+const pg=()=>location.hash.slice(2)||(S&&S.role=='guru'?'dashboard':'beranda');
+window.onhashchange=()=>render();
+function render(){const a=$('#app');a.className=S&&S.role=='siswa'?'sw':'';a.innerHTML=!S?loginV():S.role=='guru'?guruV():siswaV()}
+function loginV(){return`<div class=lg><div class=card><h1>EduMonitor English SMA</h1><p class=sl>Teach Better, Learn Deeper, Grow Together</p><div class=tabs><button id=t1 class=on onclick="tab(1)">Guru</button><button id=t2 onclick="tab(2)">Siswa</button></div>
+<form id=f1 onsubmit="lg(event,'guru')"><label>Email guru<input name=u type=email placeholder="email@contoh.com"></label><label>Kata sandi<input name=p type=password></label><button class=b>Masuk sebagai guru</button></form>
+<form id=f2 hidden onsubmit="lg(event,'siswa')"><label>Nama lengkap<input name=u placeholder="mis. Ayu Lestari"></label><label>Kode kelas<input name=p placeholder="demo: XA2026"></label><button class=b>Masuk ke kelas</button></form></div></div>`}
+function tab(n){f1.hidden=n!=1;f2.hidden=n!=2;t1.className=n==1?'on':'';t2.className=n==2?'on':''}
+async function lg(e,r){e.preventDefault();const u=e.target.u.value.trim(),p=e.target.p.value.trim();
+if(r=='guru'){try{await fb.login(u,p)}catch{return alert('Email atau kata sandi salah')}S={role:'guru'};fb.push(DB)}
+else{const k=DB.kelas.find(c=>c.kode.toUpperCase()==p.toUpperCase()),s=k&&DB.siswa.find(a=>a.kelas==k.id&&a.nama.toLowerCase()==u.toLowerCase());if(!s)return alert('Nama atau kode kelas tidak cocok. Hubungi guru.');S={role:'siswa',id:s.id,kelas:k.id};log(s.nama+' masuk ke kelas '+k.nama)}
+sessionStorage.setItem('edu_s',JSON.stringify(S));save();location.hash='';render()}
+function out(){window.fb&&fb.logout();S=null;sessionStorage.removeItem('edu_s');location.hash='';render()}
+/* ---------- CRUD generik ---------- */
+const fd=(e,k)=>O[e].f.find(a=>a[0]==k);
+function show(e,r,c){const f=fd(e,c),v=r[c];return f[2]=='kelas'?x(kn(v)):f[2]=='file'?x(v&&v.n):x(String(v??'').slice(0,60))}
+function tbl(e,rows=DB[e]){const o=O[e];return`<div class=bar><input placeholder="Cari..." oninput="flt(this)"><select onchange="flt(this)"><option value="">Semua kelas</option>${DB.kelas.map(k=>`<option>${x(k.nama)}</option>`).join('')}</select><button class=b onclick="frm('${e}')">+ Tambah ${o.t}</button></div><div class=tw><table><tr>${o.c.map(c=>`<th>${fd(e,c)[1].split(' (')[0].split(',')[0]}</th>`).join('')}<th>Aksi</th></tr>${rows.map(r=>`<tr>${o.c.map(c=>`<td>${show(e,r,c)}</td>`).join('')}<td class=ac>${acts(e,r)}</td></tr>`).join('')||'<tr><td colspan=9>Belum ada data. Klik Tambah untuk memulai.</td></tr>'}</table></div>`}
+function flt(el){const b=el.closest('.bar'),q=b.querySelector('input').value.toLowerCase(),k=b.querySelector('select').value.toLowerCase();b.nextElementSibling.querySelectorAll('tr').forEach((r,i)=>{const t=r.textContent.toLowerCase();if(i)r.style.display=t.includes(q)&&t.includes(k)?'':'none'})}
+function acts(e,r){let a=`<a onclick="frm('${e}','${r.id}')">Ubah</a><a onclick="del('${e}','${r.id}')">Hapus</a>`;
+if(e=='modul')a+=`<a onclick="dup('${r.id}')">Duplikat</a><a onclick="stt('${r.id}','Terbit')">Terbitkan</a><a onclick="stt('${r.id}','Arsip')">Arsipkan</a>`;
+if(e=='tugas')a+=`<a onclick="nilai('${r.id}')">Nilai</a>`;if(e=='kuis')a+=`<a onclick="rekap('${r.id}')">Rekap</a>`;
+if(r.file)a+=`<a onclick="pv('${e}','${r.id}')">Berkas</a>`;return a}
+function frm(e,id){const o=O[e],r=id?DB[e].find(a=>a.id==id):{};
+modal(`<h3>${id?'Ubah':'Tambah'} ${o.t}</h3><form onsubmit="sv(event,'${e}','${id||''}')">${o.f.map(([k,l,t,op])=>`<label>${l}${t=='ta'?`<textarea name=${k} rows=3>${x(r[k])}</textarea>`:t=='sel'?`<select name=${k}>${op.map(v=>`<option ${r[k]==v?'selected':''}>${v}</option>`).join('')}</select>`:t=='kelas'?`<input name=${k} value="${x(r[k]?kn(r[k]):'')}" placeholder="Ketik nama kelas, mis. X-A" required>`:t=='file'?`<input type=file name=${k} accept="${op.split(',').map(a=>'.'+a)}">${r[k]?'<small>Berkas saat ini: '+x(r[k].n)+'</small>':''}`:`<input name=${k} type=${t||'text'} value="${x(r[k])}" required>`}</label>`).join('')}<button class=b>Simpan</button></form>`)}
+function kid(n){n=(n||'').trim();let k=DB.kelas.find(c=>c.nama.toLowerCase()==n.toLowerCase());if(!k){let kode=n.toUpperCase().replace(/[^A-Z0-9]/g,'')+'2026';while(DB.kelas.some(c=>c.kode.toUpperCase()==kode))kode+=Math.floor(Math.random()*10);k={id:uid(),nama:n,kode,tahun:''};DB.kelas.push(k)}return k.id}
+async function sv(ev,e,id){ev.preventDefault();const f=new FormData(ev.target),r=id?DB[e].find(a=>a.id==id):{id:uid()};
+for(const[k,l,t,op]of O[e].f){if(t=='file'){const z=f.get(k);if(z&&z.size){if(!op.split(',').includes(z.name.split('.').pop().toLowerCase())||z.size>7e5)return alert('Berkas ditolak. Tipe: '+op+'; maksimal 700 KB.');r[k]={n:z.name,d:await new Promise(s=>{const a=new FileReader;a.onload=()=>s(a.result);a.readAsDataURL(z)})}}}else r[k]=t=='kelas'?kid(f.get(k)):f.get(k)}
+if(e=='kelas'&&DB.kelas.some(c=>c.kode.toUpperCase()==r.kode.toUpperCase()&&c.id!=r.id))return alert('Kode kelas sudah dipakai.');
+if(!id)DB[e].push(r);log((id?'Mengubah ':'Menambah ')+O[e].t+': '+(r.judul||r.nama||r.materi));save();closeM();render()}
+function del(e,id){if(!confirm('Hapus data ini?'))return;DB[e]=DB[e].filter(a=>a.id!=id);log('Menghapus '+O[e].t);save();render()}
+function dup(id){const r=DB.modul.find(a=>a.id==id);DB.modul.push({...r,id:uid(),judul:r.judul+' (salinan)',status:'Draf'});save();render()}
+function stt(id,s){DB.modul.find(a=>a.id==id).status=s;log('Modul '+s);save();render()}
+function pv(e,id){const f=DB[e].find(a=>a.id==id).file,p=f.d.startsWith('data:application/pdf');modal(`<h3>${x(f.n)}</h3>${p?`<iframe src="${f.d}" style="width:100%;height:60vh;border:0"></iframe>`:f.d.startsWith('data:image')?`<img src="${f.d}" style="max-width:100%">`:'<p>Pratinjau tidak tersedia untuk DOC/DOCX.</p>'}<p><a href="${f.d}" download="${x(f.n)}">Unduh berkas</a></p>`)}
+/* ---------- statistik ---------- */
+function st(s){const p=DB.presensi.filter(a=>a.siswa==s.id),h=p.filter(a=>a.s=='H').length,hp=p.length?Math.round(100*h/p.length):100,tg=DB.tugas.filter(t=>t.kelas==s.kelas).length,kp=DB.kumpul.filter(k=>k.siswa==s.id),ns=[...DB.hasil.filter(a=>a.siswa==s.id).map(a=>+a.skor),...kp.filter(k=>k.nilai!=='').map(k=>+k.nilai)],avg=ns.length?Math.round(ns.reduce((a,b)=>a+b)/ns.length):null;
+return{hp,tg,kum:kp.length,avg,ns,tuntas:avg!==null&&avg>=70,rec:avg!==null&&avg<70?'Remedial dan pendampingan individu':hp<80?'Hubungi siswa/orang tua terkait kehadiran':kp.length<tg?'Ingatkan pengumpulan tugas':'Pengayaan / tantangan lanjutan'}}
+const pend=()=>DB.kumpul.filter(k=>k.nilai==='').length;
+/* ---------- guru ---------- */
+const NAV=[['dashboard','Dashboard'],['kelas','Kelas'],['siswa','Siswa'],['modul','Modul Saya'],['materi','Materi'],['kuis','Kuis'],['tugas','Tugas'],['presensi','Presensi'],['jurnal','Jurnal Mengajar'],['monitoring','Monitoring'],['laporan','Laporan']];
+function guruV(){const p=pg(),cur=NAV.find(n=>n[0]==p)||NAV[0];
+return`<div class=lay><nav class=sb><h2>EduMonitor</h2><small>English SMA</small>${NAV.map(n=>`<a href="#/${n[0]}" class="${n[0]==cur[0]?'on':''}">${n[1]}</a>`).join('')}</nav><div class=mn><div class=tp><a href="#/tugas" title="Tugas belum dinilai">Notifikasi (${pend()})</a><a onclick="bk()">Cadangan</a><span>Guru</span><a onclick="out()">Keluar</a></div><div class=ct><h2>${cur[1]}</h2>${PG[cur[0]]()}</div></div></div>`}
+const PG={dashboard(){const ss=DB.siswa.map(s=>({s,...st(s)})),all=ss.filter(a=>a.avg!==null),av=all.length?Math.round(all.reduce((a,b)=>a+b.avg,0)/all.length):'-',ph=DB.presensi.length?Math.round(100*DB.presensi.filter(a=>a.s=='H').length/DB.presensi.length):0;
+return`<div class=gr>${[['Siswa',DB.siswa.length],['Kelas',DB.kelas.length],['Kehadiran',ph+'%'],['Tugas aktif',DB.tugas.filter(t=>t.tenggat>=today()).length],['Rata-rata nilai',av]].map(a=>`<div class=st><b>${a[1]}</b><span>${a[0]}</span></div>`).join('')}</div>
+<div class=card><h3>Rata-rata nilai per kelas</h3>${DB.kelas.map(k=>{const v=ss.filter(a=>a.s.kelas==k.id&&a.avg!==null),m=v.length?Math.round(v.reduce((a,b)=>a+b.avg,0)/v.length):0;return`${x(k.nama)}: ${m}<div class=hb style="width:${m}%"></div>`}).join('')}</div>
+<div class=card><h3>Siswa yang memerlukan pendampingan</h3>${ss.filter(a=>(a.avg!==null&&a.avg<70)||a.hp<80).map(a=>`<p>${x(a.s.nama)} (${x(kn(a.s.kelas))}) - nilai ${a.avg??'-'}, hadir ${a.hp}%</p>`).join('')||'Semua siswa dalam kondisi baik.'}</div>
+<div class=card><h3>Aktivitas terbaru</h3>${DB.log.slice(0,6).map(l=>`<p><small>${l.t}</small> ${x(l.m)}</p>`).join('')||'Belum ada aktivitas.'}</div>`},
+kelas:()=>tbl('kelas'),siswa:()=>tbl('siswa'),modul:()=>tbl('modul'),materi:()=>tbl('materi'),kuis:()=>tbl('kuis'),tugas:()=>tbl('tugas'),jurnal:()=>tbl('jurnal'),
+presensi(){PK=PK||(DB.kelas[0]||{}).id;const ss=DB.siswa.filter(s=>s.kelas==PK),kls=`<select onchange="PK=this.value;render()">${DB.kelas.map(k=>`<option value=${k.id} ${k.id==PK?'selected':''}>${x(k.nama)}</option>`).join('')}</select>`;
+const lim=new Date(Date.now()-PP*864e5).toISOString().slice(0,10);
+return`<div class=card><div class=bar>${kls}<input type=date value=${PD} onchange="PD=this.value;render()"></div><form onsubmit="svp(event)"><div class=tw><table><tr><th>Siswa</th><th>Status</th></tr>${ss.map(s=>{const c=(DB.presensi.find(a=>a.siswa==s.id&&a.tgl==PD)||{s:'H'}).s;return`<tr><td>${x(s.nama)}</td><td><select name=${s.id}>${[['H','Hadir'],['S','Sakit'],['I','Izin'],['A','Alpa']].map(o=>`<option value=${o[0]} ${c==o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></td></tr>`}).join('')}</table></div><button class=b>Simpan presensi</button></form></div>
+<div class=card><div class=bar><h3>Rekap</h3><select onchange="PP=+this.value;render()">${[[1,'Harian'],[7,'Mingguan'],[30,'Bulanan'],[180,'Semester']].map(o=>`<option value=${o[0]} ${PP==o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></div><div class=tw><table><tr><th>Siswa</th><th>H</th><th>S</th><th>I</th><th>A</th></tr>${ss.map(s=>{const p=DB.presensi.filter(a=>a.siswa==s.id&&(PP==1?a.tgl==PD:a.tgl>=lim&&a.tgl<=PD));return`<tr><td>${x(s.nama)}</td>${'HSIA'.split('').map(c=>`<td>${p.filter(a=>a.s==c).length}</td>`).join('')}</tr>`}).join('')}</table></div></div>`},
+monitoring(){return`<div class=tw><table><tr><th>Siswa</th><th>Kelas</th><th>Hadir</th><th>Tugas</th><th>Nilai</th><th>Kompetensi</th><th>Rekomendasi</th><th></th></tr>${DB.siswa.map(s=>{const a=st(s);return`<tr><td>${x(s.nama)}</td><td>${x(kn(s.kelas))}</td><td>${a.hp}%</td><td>${a.kum}/${a.tg}</td><td>${a.avg??'-'}</td><td class=${a.tuntas?'ok':'bad'}>${a.avg===null?'-':a.tuntas?'Tuntas':'Belum tuntas'}</td><td>${a.rec}</td><td><a onclick="det('${s.id}')">Detail</a></td></tr>`}).join('')}</table></div>`},
+laporan(){RK=RK||(DB.kelas[0]||{}).id;const ss=DB.siswa.filter(s=>s.kelas==RK);return`<div class=bar><select onchange="RK=this.value;render()">${DB.kelas.map(k=>`<option value=${k.id} ${k.id==RK?'selected':''}>${x(k.nama)}</option>`).join('')}</select><button class=b onclick="csv()">Ekspor Excel (CSV)</button><button class=b onclick="window.print()">Ekspor PDF (Cetak)</button></div><div class=tw><table><tr><th>Siswa</th><th>Kehadiran</th><th>Tugas</th><th>Rata-rata</th><th>Ketuntasan</th><th>Laporan individu</th></tr>${ss.map(s=>{const a=st(s);return`<tr><td>${x(s.nama)}</td><td>${a.hp}%</td><td>${a.kum}/${a.tg}</td><td>${a.avg??'-'}</td><td>${a.tuntas?'Tuntas':'Belum'}</td><td><a onclick="det('${s.id}')">Buka</a></td></tr>`}).join('')}</table></div>`}};
+function svp(e){e.preventDefault();const f=new FormData(e.target);for(const[id,s]of f){DB.presensi=DB.presensi.filter(a=>!(a.siswa==id&&a.tgl==PD));DB.presensi.push({siswa:id,tgl:PD,s})}log('Presensi '+kn(PK)+' '+PD);save();alert('Presensi tersimpan');render()}
+function det(id){const s=DB.siswa.find(a=>a.id==id),a=st(s);modal(`<h3>${x(s.nama)} - ${x(kn(s.kelas))}</h3><p>Kehadiran ${a.hp}% | Tugas ${a.kum}/${a.tg} | Rata-rata ${a.avg??'-'}</p>${a.ns.map(n=>`<div class=hb style="width:${n}%">&nbsp;${n}</div>`).join('')}<p><b>Rekomendasi:</b> ${a.rec}</p><h4>Refleksi siswa</h4>${DB.refleksi.filter(r=>r.siswa==id).map(r=>`<p><small>${r.t}</small> ${x(r.teks)}</p>`).join('')||'<p>Belum ada.</p>'}<button class=b onclick="window.print()">Cetak laporan</button>`)}
+function csv(){const r=[['Nama','Kelas','Kehadiran %','Tugas','Rata-rata','Ketuntasan']];DB.siswa.filter(s=>s.kelas==RK).forEach(s=>{const a=st(s);r.push([s.nama,kn(s.kelas),a.hp,a.kum+'/'+a.tg,a.avg??'',a.tuntas?'Tuntas':'Belum'])});dl('laporan.csv','text/csv',r.map(l=>l.map(c=>`"${c}"`).join(',')).join('\n'))}
+function dl(n,t,c){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=n;a.click()}
+function bk(){modal(`<h3>Cadangan data</h3><p><button class=b onclick="dl('edumonitor-backup.json','application/json',JSON.stringify(DB))">Unduh cadangan</button></p><label>Pulihkan dari berkas<input type=file accept=.json onchange="rs(this.files[0])"></label>`)}
+function rs(f){const r=new FileReader;r.onload=()=>{try{DB=JSON.parse(r.result);save();closeM();render()}catch{alert('Berkas tidak valid')}};r.readAsText(f)}
+function rekap(id){const q=DB.kuis.find(a=>a.id==id);modal(`<h3>Rekap ${x(q.judul)}</h3><p>Skor otomatis dihitung dari soal objektif; soal uraian dinilai manual.</p><table><tr><th>Siswa</th><th>Skor</th><th>Waktu</th></tr>${DB.hasil.filter(h=>h.kuis==id).map(h=>`<tr><td>${x(sn(h.siswa))}</td><td>${h.skor}</td><td>${h.t}</td></tr>`).join('')||'<tr><td colspan=3>Belum ada hasil</td></tr>'}</table>`)}
+function nilai(id){const t=DB.tugas.find(a=>a.id==id);modal(`<h3>Penilaian: ${x(t.judul)}</h3><p>Rubrik: ${x(t.rubrik)}</p>${DB.kumpul.filter(k=>k.tugas==id).map(k=>`<form class=card onsubmit="gr(event,'${k.id}')"><b>${x(sn(k.siswa))}</b><p>${x(k.teks)}</p>${k.file?`<a onclick="pv('kumpul','${k.id}')">Lihat berkas</a>`:''}<label>Nilai<input name=n type=number min=0 max=100 value="${k.nilai}" required></label><label>Umpan balik<textarea name=u>${x(k.umpan)}</textarea></label><button class=b>Simpan nilai</button></form>`).join('')||'<p>Belum ada pengumpulan.</p>'}`)}
+function gr(e,id){e.preventDefault();const k=DB.kumpul.find(a=>a.id==id);k.nilai=+e.target.n.value;k.umpan=e.target.u.value;log('Menilai tugas '+sn(k.siswa));save();alert('Nilai tersimpan');render()}
+/* ---------- siswa ---------- */
+const SN=[['beranda','Beranda'],['materi','Materi'],['modul','Modul'],['kuis','Kuis'],['tugas','Tugas'],['nilai','Nilai'],['refleksi','Refleksi']];
+function siswaV(){const p=pg(),me=DB.siswa.find(a=>a.id==S.id);if(!me)return out();const k=S.kelas,c=SP[SN.some(n=>n[0]==p)?p:'beranda'](me,k);
+return`<div class=tp><b>${x(me.nama)} - ${x(kn(k))}</b><a onclick="out()">Keluar</a></div><div class=ct><div class=tabs>${SN.map(n=>`<button class="${n[0]==p?'on':''}" onclick="location.hash='#/${n[0]}'">${n[1]}</button>`).join('')}</div>${c}</div>`}
+const SP={beranda(m){const a=st(m);return`<div class=gr><div class=st><b>${a.hp}%</b><span>Kehadiran</span></div><div class=st><b>${a.kum}/${a.tg}</b><span>Tugas terkumpul</span></div><div class=st><b>${a.avg??'-'}</b><span>Rata-rata nilai</span></div></div><div class=card><h3>Halo, ${x(m.nama.split(' ')[0])}!</h3>${a.tuntas?'Kompetensimu sudah tuntas. Pertahankan!':'Terus berlatih; kerjakan kuis dan tugas yang tersedia.'}</div>`},
+materi(m,k){return DB.materi.filter(a=>a.kelas==k).map(a=>`<div class=card><h3>${x(a.judul)}</h3><span class=tag>${a.ks}</span> <span class=tag>${a.tipe}</span><p>${/^https?:/.test(a.isi)?(a.tipe=='Gambar'?`<img src="${x(a.isi)}" style="max-width:100%">`:a.tipe=='Video'?`<video controls src="${x(a.isi)}" style="max-width:100%"></video>`:a.tipe=='Audio'?`<audio controls src="${x(a.isi)}"></audio>`:`<a target=_blank rel=noopener href="${x(a.isi)}">Buka tautan</a>`):x(a.isi)}</p></div>`).join('')||'Belum ada materi.'},
+modul(m,k){return DB.modul.filter(a=>a.kelas==k&&a.status=='Terbit').map(a=>`<div class=card><h3>${x(a.judul)}</h3><p><b>Tujuan:</b> ${x(a.tp)}</p><p><b>Pertanyaan pemantik:</b> ${x(a.pemantik)}</p><p>${x(a.materi)}</p><p>${x(a.aktivitas)}</p>${a.file?`<a onclick="pv('modul','${a.id}')">Buka berkas</a>`:''}</div>`).join('')||'Belum ada modul diterbitkan.'},
+kuis(m,k){return DB.kuis.filter(a=>a.kelas==k).map(a=>{const h=DB.hasil.find(z=>z.kuis==a.id&&z.siswa==m.id);return`<div class=card><h3>${x(a.judul)}</h3>${+a.durasi?a.durasi+' menit':'Tanpa batas waktu'}<p>${h?`Skor Anda: <b>${h.skor}</b>`:`<button class=b onclick="mulai('${a.id}')">Mulai kuis</button>`}</p></div>`}).join('')||'Belum ada kuis.'},
+tugas(m,k){return DB.tugas.filter(a=>a.kelas==k).map(a=>{const u=DB.kumpul.find(z=>z.tugas==a.id&&z.siswa==m.id);return`<div class=card><h3>${x(a.judul)}</h3><p>${x(a.instruksi)}</p><p>Tenggat: ${a.tenggat}</p>${a.file?`<a onclick="pv('tugas','${a.id}')">Lampiran</a>`:''}<p>${u?'Terkumpul. '+(u.nilai!==''?`Nilai: <b>${u.nilai}</b> - ${x(u.umpan)}`:'Menunggu penilaian.'):`<button class=b onclick="kumpul('${a.id}')">Kumpulkan</button>`}</p></div>`}).join('')||'Belum ada tugas.'},
+nilai(m){const a=st(m);return`<div class=card><h3>Nilai dan umpan balik</h3>${DB.hasil.filter(h=>h.siswa==m.id).map(h=>`<p>Kuis ${x(DB.kuis.find(q=>q.id==h.kuis)?.judul)}: <b>${h.skor}</b></p>`).join('')}${DB.kumpul.filter(h=>h.siswa==m.id&&h.nilai!=='').map(h=>`<p>Tugas ${x(DB.tugas.find(q=>q.id==h.tugas)?.judul)}: <b>${h.nilai}</b> - ${x(h.umpan)}</p>`).join('')}<p>Rata-rata: <b>${a.avg??'-'}</b></p></div>`},
+refleksi(m){return`<div class=card><h3>Refleksi pembelajaran</h3><form onsubmit="rf(event)"><label>Apa yang kamu pelajari hari ini? Apa yang masih sulit?<textarea name=t required></textarea></label><button class=b>Kirim refleksi</button></form></div>${DB.refleksi.filter(r=>r.siswa==m.id).map(r=>`<div class=card><small>${r.t}</small><p>${x(r.teks)}</p></div>`).join('')}`}};
+function rf(e){e.preventDefault();DB.refleksi.push({id:uid(),siswa:S.id,teks:e.target.t.value,t:today()});log(sn(S.id)+' mengirim refleksi');save();render()}
+function kumpul(id){modal(`<h3>Kumpulkan tugas</h3><form onsubmit="ks(event,'${id}')"><label>Jawaban teks<textarea name=t rows=5></textarea></label><label>Berkas (PDF, DOCX, JPG, PNG)<input type=file name=f accept=".pdf,.docx,.jpg,.png"></label><button class=b>Kumpulkan</button></form>`)}
+async function ks(e,id){e.preventDefault();const f=e.target.f.files[0],r={id:uid(),tugas:id,siswa:S.id,teks:e.target.t.value,nilai:'',umpan:'',t:today()};
+if(!f&&!r.teks.trim())return alert('Isi jawaban atau unggah berkas.');
+if(f){if(!['pdf','docx','jpg','png'].includes(f.name.split('.').pop().toLowerCase())||f.size>7e5)return alert('Berkas ditolak (PDF/DOCX/JPG/PNG, maks 700 KB).');r.file={n:f.name,d:await new Promise(s=>{const a=new FileReader;a.onload=()=>s(a.result);a.readAsDataURL(f)})}}
+DB.kumpul.push(r);log(sn(S.id)+' mengumpulkan tugas');save();closeM();render()}
+const parse=t=>t.split('\n').filter(l=>l.trim()).map(l=>{const[a,q,o,k]=l.split('|'),y=a.trim();return{t:y,q,o:y=='bs'?['Benar','Salah']:(o||'').split(';').map(z=>z.trim()),k:(k||'').trim()}});
+let QS;function mulai(id){const q=DB.kuis.find(a=>a.id==id);QS=parse(q.soal);if(q.acak=='Ya')QS.sort(()=>Math.random()-.5);
+modal(`<h3>${x(q.judul)}</h3><b id=tm></b><form id=kf onsubmit="kk(event,'${id}')">${QS.map((a,i)=>`<p><b>${i+1}. ${x(a.q)}</b></p>${a.t=='uraian'?`<textarea name=q${i}></textarea>`:a.t=='isi'?`<input name=q${i}>`:a.o.map(o=>`<label class=r><input type=radio name=q${i} value="${x(o)}">${x(o)}</label>`).join('')}`).join('')}<button class=b>Kumpulkan</button></form>`);
+if(+q.durasi){let t=q.durasi*60;TM=setInterval(()=>{t--;tm.textContent='Sisa waktu '+Math.floor(t/60)+':'+String(t%60).padStart(2,'0');if(t<=0){clearInterval(TM);kf.requestSubmit()}},1000)}}
+function kk(e,id){e.preventDefault();clearInterval(TM);const f=new FormData(e.target),ob=QS.map((a,i)=>[a,f.get('q'+i)]).filter(a=>a[0].t!='uraian'),b=ob.filter(([a,v])=>(v||'').trim().toLowerCase()==a.k.toLowerCase()).length,skor=ob.length?Math.round(100*b/ob.length):0;
+DB.hasil.push({id:uid(),kuis:id,siswa:S.id,skor,t:today()});log(sn(S.id)+' menyelesaikan kuis (skor '+skor+')');save();closeM();alert('Skor Anda: '+skor);render()}
+addEventListener('load',()=>fb.init().then(d=>{if(d)DB=d;render()}).catch(e=>{console.error(e);render()}));
+</script></body></html>
