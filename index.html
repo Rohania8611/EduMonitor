@@ -52,10 +52,14 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-
 import {getFirestore,collection,getDocs,doc,setDoc,deleteDoc} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 import {getAuth,signInAnonymously,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 /* GANTI dengan firebaseConfig milik Anda (Firebase Console > Project settings > Your apps) */
-const app=initializeApp({apiKey:"AIzaSyDF-jTtVzTf4l73EQFL6sOWp58sWXo4XIs",authDomain:"rohania-english.firebaseapp.com",projectId:"rohania-english",storageBucket:"rohania-english.firebasestorage.app",messagingSenderId:"853989025850",appId:"1:853989025850:web:71570c79cc4b416f362d03"});
-const db=getFirestore(app),auth=getAuth(app);
-const COLS=['kelas','siswa','modul','materi','kuis','tugas','hasil','kumpul','presensi','jurnal','refleksi'];
-const last={},rid=r=>r.id||r.siswa+'_'+r.tgl;
+const firebaseConfig = {
+  apiKey: "AIzaSyBV-LFQR2AUVy5xaTjL5GVl0w8SdT1vJ7o",
+  authDomain: "edumonitor-english.firebaseapp.com",
+  projectId: "edumonitor-english",
+  storageBucket: "edumonitor-english.firebasestorage.app",
+  messagingSenderId: "187157104893",
+  appId: "1:187157104893:web:280572040bc17c975b9694"
+};
 async function pull(){const d={log:[]};let n=0;
  for(const c of COLS){const s=await getDocs(collection(db,c));d[c]=s.docs.map(x=>x.data());n+=s.size;last[c]={};d[c].forEach(r=>last[c][rid(r)]=JSON.stringify(r))}
  return n?d:null}
